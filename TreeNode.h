@@ -20,7 +20,7 @@
  */
 template<typename T>
 class TreeNode {
-	private:
+	public:
 		TreeNode():left(NULL),right(NULL) {
 		}
 
@@ -32,9 +32,6 @@ class TreeNode {
 		T item;
 		/** Pointers to children. */
 		TreeNode *left, *right;
-
-		// friend class - can access private parts
-		friend class BSTree;
 };
 // end TreeNode
 

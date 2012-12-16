@@ -1,5 +1,5 @@
 /**
- * Title: BSTTree.cpp
+ * Title: BSTTree.h
  * Name: Robert O'Connor
  * Created: 12/12/12
  * Description: a Binary Search Tree implementation
@@ -79,6 +79,7 @@ class BSTree {
 		// These have been adapted from the book's code.
 		void getChildPtrs(TreeNode<T> *node, TreeNode<T> *& left, TreeNode<T> *& right) const;
 		void setChildPtrs(TreeNode<T> *node, TreeNode<T> *left, TreeNode<T> *right);
+
 	protected:
 		/** Retrieves and deletes the leftmost descendant of a given
 		 *  node.
@@ -106,7 +107,7 @@ class BSTree {
 template<typename T>
 BSTree<T>::BSTree() :
 		root(NULL) {
-}
+}  // end default constructor
 
 template<typename T>
 BSTree<T>::BSTree(BSTree& other) throw (TreeException) {
@@ -121,7 +122,7 @@ template<typename T>
 BSTree<T>& BSTree<T>::operator=(BSTree<T> & rhs) throw (TreeException) {
 	if (this != &rhs) {
 		destroyTree(root);  // deallocate left-hand side
-		copyTree(rhs->root, root);  // copy right-hand side
+		copyTree(rhs.root, root);  // copy right-hand side
 	}  // end if
 	return *this;
 }  // end operator=
@@ -139,17 +140,18 @@ void BSTree<T>::insert(T item, TreeNode<T>* treePtr) throw (TreeException) {
 		try {
 			treePtr = new TreeNode<T>(item, NULL, NULL);
 		} catch (bad_alloc e) {
-			throw TreeException("TreeException: cannot allocate new memory for the new node to be inserted!");
+			throw TreeException(
+			        "TreeException: cannot allocate new memory for the new node to be inserted!");
 		}  // end try
 	}
 	// else search for the insertion position
 	else if (item < treePtr->item)
 		// search the left subtree
-		insert(item,treePtr.left);
+		insert(item, treePtr->left);
 
 	else
 		// search the right subtree
-		insert(item,treePtr.right);
+		insert(item, treePtr->right);
 }
 
 template<typename T>
@@ -213,8 +215,8 @@ T* BSTree<T>::retrieve(TreeNode<T>* treePtr, T item) {
 		return NULL;
 	else if (item == treePtr->item)
 		// item is in the root of some subtree
-		return treePtr->item;
-	else if (item < treePtr->item.getKey())
+		return &(treePtr->item);
+	else if (item < treePtr->item)
 		// search the left subtree
 		return retrieve(treePtr->left, item);
 	else

@@ -13,7 +13,13 @@
 #include "BSTree.h"
 
 using namespace std;
-class BSTree<string>;
+BSTree<string> indexFile(string fileName);
 int main(int argc, char **argv) {
+	BSTree<string> tree = indexFile(argv[1]);
+}
+
+BSTree<string> indexFile(string fileName) {
 	BSTree<string> tree;
+	return tree;
+
 }
