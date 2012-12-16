@@ -12,7 +12,7 @@
 /** @file TreeNode.h */
 
 #include <cstddef>
-
+#include <iostream>
 
 /** @class TreeNode
  * Node used in the ADT binary search tree.

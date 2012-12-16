@@ -15,6 +15,7 @@
 
 template<typename T>
 class BSTree {
+		typedef void (*FunctionType)(T* node);
 	public:
 		// default ctor
 		BSTree();
@@ -67,18 +68,20 @@ class BSTree {
 		virtual T* retrieve(TreeNode<T>* treePtr, T item);
 
 		// getter & setter for the root node.
-		TreeNode<T> getRoot();
+		TreeNode<T>* getRoot();
 		void setRoot(TreeNode<T> *root);
 
 		// traversal functions adapted from the code from the book...
-		void preorder(TreeNode<T> *node, T& visit);
-		void inorder(TreeNode<T> *node, T& visit);
-		void postorder(TreeNode<T> *node, T& visit);
+		void preorder(TreeNode<T> *node, FunctionType visit);
+		void inorder(TreeNode<T> *node, FunctionType visit);
+		void postorder(TreeNode<T> *node, FunctionType visit);
 
 		// helper function to get the children (as well as set them).
 		// These have been adapted from the book's code.
 		void getChildPtrs(TreeNode<T> *node, TreeNode<T> *& left, TreeNode<T> *& right) const;
 		void setChildPtrs(TreeNode<T> *node, TreeNode<T> *left, TreeNode<T> *right);
+
+		int height(TreeNode<T> *node);
 
 	protected:
 		/** Retrieves and deletes the leftmost descendant of a given
@@ -99,12 +102,13 @@ class BSTree {
 
 		/** Deallocates memory for a tree. */
 		void destroyTree(TreeNode<T> *& treePtr);
+
 	private:
-		typedef void (*FunctionType)(T&);
 		TreeNode<T> *root;
 };
 
 template<typename T>
+
 BSTree<T>::BSTree() :
 		root(NULL) {
 }  // end default constructor
@@ -120,7 +124,7 @@ BSTree<T>::~BSTree() {
 }
 template<typename T>
 BSTree<T>& BSTree<T>::operator=(BSTree<T> & rhs) throw (TreeException) {
-	if (this != &rhs) {
+	if(this != &rhs) {
 		destroyTree(root);  // deallocate left-hand side
 		copyTree(rhs.root, root);  // copy right-hand side
 	}  // end if
@@ -134,37 +138,40 @@ bool BSTree<T>::isEmpty() {
 
 template<typename T>
 void BSTree<T>::insert(T item, TreeNode<T>* treePtr) throw (TreeException) {
-	if (treePtr == NULL) {  // position of insertion found; insert after leaf
-
+	if(treePtr == NULL) {  // position of insertion found; insert after leaf
 		// create a new node
 		try {
 			treePtr = new TreeNode<T>(item, NULL, NULL);
-		} catch (bad_alloc e) {
+		} catch(bad_alloc &e) {
 			throw TreeException(
 			        "TreeException: cannot allocate new memory for the new node to be inserted!");
 		}  // end try
 	}
 	// else search for the insertion position
-	else if (item < treePtr->item)
+	else if(item < treePtr->item) {
 		// search the left subtree
+		cout << "item inserted to the left" << endl;
 		insert(item, treePtr->left);
+	}
 
-	else
+	else {
 		// search the right subtree
+		cout << "item inserted to the left" << endl;
 		insert(item, treePtr->right);
+	}
 }
 
 template<typename T>
 void BSTree<T>::deleteItem(T item, TreeNode<T>*& treePtr) throw (TreeException) {
-	if (treePtr == NULL)
+	if(treePtr == NULL)
 		throw TreeException("TreeException: delete failed");  // empty tree
 
-	else if (item == treePtr->item)
+	else if(item == treePtr->item)
 		// item is in the root of some subtree
 		deleteNodeItem(item, treePtr);  // delete the item
 
 	// else search for the item
-	else if (item < treePtr->item)
+	else if(item < treePtr->item)
 		// search the left subtree
 		deleteItem(item, treePtr->left);
 
@@ -179,13 +186,13 @@ void BSTree<T>::deleteNodeItem(T item, TreeNode<T>* nodePtr) {
 	T replacementItem;
 
 	// test for a leaf
-	if ((nodePtr->left == NULL) && (nodePtr->right == NULL)) {
+	if((nodePtr->left == NULL) && (nodePtr->right == NULL)) {
 		delete nodePtr;
 		nodePtr = NULL;
 	}  // end if leaf
 
 	// test for no left child
-	else if (nodePtr->left == NULL) {
+	else if(nodePtr->left == NULL) {
 		delPtr = nodePtr;
 		nodePtr = nodePtr->right;
 		delPtr->right = NULL;
@@ -193,7 +200,7 @@ void BSTree<T>::deleteNodeItem(T item, TreeNode<T>* nodePtr) {
 	}  // end if no left child
 
 	// test for no right child
-	else if (nodePtr->right == NULL) {
+	else if(nodePtr->right == NULL) {
 		delPtr = nodePtr;
 		nodePtr = nodePtr->left;
 		delPtr->left = NULL;
@@ -211,12 +218,12 @@ void BSTree<T>::deleteNodeItem(T item, TreeNode<T>* nodePtr) {
 template<typename T>
 T* BSTree<T>::retrieve(TreeNode<T>* treePtr, T item) {
 	T* ret = NULL;
-	if (treePtr == NULL)
+	if(treePtr == NULL)
 		return NULL;
-	else if (item == treePtr->item)
+	else if(item == treePtr->item)
 		// item is in the root of some subtree
 		return &(treePtr->item);
-	else if (item < treePtr->item)
+	else if(item < treePtr->item)
 		// search the left subtree
 		return retrieve(treePtr->left, item);
 	else
@@ -225,7 +232,7 @@ T* BSTree<T>::retrieve(TreeNode<T>* treePtr, T item) {
 }
 
 template<typename T>
-TreeNode<T> BSTree<T>::getRoot() {
+TreeNode<T>* BSTree<T>::getRoot() {
 	return this->root;
 }
 template<typename T>
@@ -234,8 +241,8 @@ void BSTree<T>::setRoot(TreeNode<T>* newRoot) {
 }
 
 template<typename T>
-void BSTree<T>::preorder(TreeNode<T>* node, T& visit) {
-	if (node != NULL) {
+void BSTree<T>::preorder(TreeNode<T>* node, FunctionType visit) {
+	if(node != NULL) {
 		postorder(node->left, visit);
 		postorder(node->right, visit);
 		visit(node->item);
@@ -243,8 +250,8 @@ void BSTree<T>::preorder(TreeNode<T>* node, T& visit) {
 }
 
 template<typename T>
-void BSTree<T>::inorder(TreeNode<T>* node, T& visit) {
-	if (node != NULL) {
+void BSTree<T>::inorder(TreeNode<T>* node, FunctionType visit) {
+	if(node != NULL) {
 		inorder(node->left, visit);
 		visit(node->item);
 		inorder(node->right, visit);
@@ -252,8 +259,8 @@ void BSTree<T>::inorder(TreeNode<T>* node, T& visit) {
 }
 
 template<typename T>
-void BSTree<T>::postorder(TreeNode<T>* node, T& visit) {
-	if (node != NULL) {
+void BSTree<T>::postorder(TreeNode<T>* node, FunctionType visit) {
+	if(node != NULL) {
 		visit(node->item);
 		preorder(node->left, visit);
 		preorder(node->right, visit);
@@ -275,7 +282,7 @@ void BSTree<T>::setChildPtrs(TreeNode<T>* node, TreeNode<T>* left, TreeNode<T>* 
 
 template<typename T>
 T BSTree<T>::inorderSuccessor(TreeNode<T>* node) {
-	if (node->left == NULL) {
+	if(node->left == NULL) {
 		T ret = node->item;
 		TreeNode<T> *delPtr = node;
 		node = node->right;
@@ -288,13 +295,13 @@ T BSTree<T>::inorderSuccessor(TreeNode<T>* node) {
 
 template<typename T>
 void BSTree<T>::copyTree(TreeNode<T>* treePtr, TreeNode<T> *&newTreePtr) throw (TreeException) {
-	if (treePtr != NULL) {
+	if(treePtr != NULL) {
 		try {
 			newTreePtr = new TreeNode<T>(newTreePtr->item, NULL, NULL);
 			copyTree(treePtr->left, newTreePtr->left);
 			copyTree(treePtr->right, newTreePtr->right);
 
-		} catch (bad_alloc &ex) {
+		} catch(bad_alloc &ex) {
 			throw new TreeException("Memory allocated for a TreeNode has failed...");
 		}
 	} else {
@@ -306,12 +313,27 @@ void BSTree<T>::copyTree(TreeNode<T>* treePtr, TreeNode<T> *&newTreePtr) throw (
 template<typename T>
 void BSTree<T>::destroyTree(TreeNode<T> *& treePtr) {
 // postorder traversal
-	if (treePtr != NULL) {
+	if(treePtr != NULL) {
 		destroyTree(treePtr->left);
 		destroyTree(treePtr->right);
 		delete treePtr;
 		treePtr = NULL;
 	}  // end if
+}
+
+template<typename T>
+int BSTree<T>::height(TreeNode<T>* node) {
+	if(node == NULL)
+		return 0;
+	if(node->left == NULL && node->right == NULL) {
+		return 1;
+	} else if(node->left != NULL && node->right != NULL) {
+		return 1 + max(height(node->left), height(node->right));
+	} else if(node->left != NULL) {
+		height(node->left) + 1;
+	} else {
+		height(node->right) + 1;
+	}
 }
 
 #endif /* BSTREE_H_ */
