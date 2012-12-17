@@ -81,16 +81,16 @@ void prompt(string &command, BSTree<string> &tree, bool &done) {
 	} else if(command == "find") {
 		string choice;
 		cin >> choice;
-		int height = tree.findHeight(choice);
-		if(height < 0) {
-			cout << endl << "Word \"" << choice << "\" does not appear." << endl;
-		} else {
+		int height = tree.find(choice);
+		if(height > 0) {
 			cout << endl << "Word \"" << choice << "\" appears at height : " << height << endl;
+		} else {
+			cout << endl << "Word \"" << choice << "\" does not appear." << endl;
 		}
 	} else if(command == "remove") {
 		string choice;
 		cin >> choice;
-		if(tree.findHeight(choice) == 0) {
+		if(tree.find(choice) == 0) {
 			cout << endl << "Word \"" << choice << "\" does not appear." << endl;
 		} else {
 			tree.searchTreeDelete(choice);
@@ -109,7 +109,6 @@ void prompt(string &command, BSTree<string> &tree, bool &done) {
 	} else {
 		cout << endl << "Please enter a valid choice. Type 'help' for available commands or 'quit' to exit anytime." << endl;
 	}
-
 }
 
 void help() {
@@ -153,5 +152,4 @@ std::vector<std::string> split(const std::string &s, char delim) {
 	std::vector<std::string> elems;
 	return split(s, delim, elems);
 }
-
 

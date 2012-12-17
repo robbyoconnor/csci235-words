@@ -59,9 +59,19 @@ class BSTree {
 		 *      retrieved.
 		 * @post If the retrieval was successful, treeItem contains the
 		 *       retrieved item.
-		 * @throw TreeException  If no such item exists.
+		 * @return a pointer to the data of the node or NULL if it's not found
 		 */
 		virtual T* searchTreeRetrieve(T item);
+
+		/** Retrieves an item with a given search key from a binary
+		 *  search tree.
+		 * @pre searchKey is the search key of the item to be
+		 *      retrieved.
+		 * @post If the retrieval was successful, treeItem contains the
+		 *       retrieved item.
+		 * @return the TreeNode or NULL if its not found
+		 */
+		virtual TreeNode<T>* searchTreeRetrieveTreeNode(T item);
 		/**
 		 * Insert an item into the tree.
 		 * @pre the item must exist
@@ -94,16 +104,18 @@ class BSTree {
 		 */
 		virtual T* retrieve(TreeNode<T>* treePtr, T item);
 
+		virtual TreeNode<T>* retrieveNode(TreeNode<T>* treePtr, T item);
+
 		/**
 		 * Find the findHeight to which our search key is located...
 		 */
-		int findHeight(TreeNode<T> *node, T key);
+		int height(TreeNode<T> *node);
 
 		/**
 		 * Helper function...
 		 * @key the key to start from...
 		 */
-		int findHeight(T key);
+		int find(T key);
 
 		void printTree(TreeNode<T> *node);
 		void destroyTree();
@@ -262,8 +274,28 @@ T* BSTree<T>::retrieve(TreeNode<T>* treePtr, T item) {
 }
 
 template<typename T>
+TreeNode<T> * BSTree<T>::retrieveNode(TreeNode<T>* treePtr, T item) {
+	if(treePtr == NULL)
+		return NULL;
+	else if(item == treePtr->item)
+		// item is in the root of some subtree
+		return treePtr;
+	else if(item < treePtr->item)
+		// search the left subtree
+		return retrieveNode(treePtr->left, item);
+	else
+		// search the right subtree
+		return retrieveNode(treePtr->right, item);
+}
+
+template<typename T>
 T* BSTree<T>::searchTreeRetrieve(T item) {
 	return retrieve(root, item);
+}
+
+template<typename T>
+TreeNode<T>* BSTree<T>::searchTreeRetrieveTreeNode(T item) {
+	return retrieveNode(root,item);
 }
 
 template<typename T>
@@ -295,30 +327,22 @@ void BSTree<T>::copyTree(TreeNode<T>* treePtr, TreeNode<T> *&newTreePtr) throw (
 	}
 
 }
-// inspired in part by Mark Stein's code -- except I used templates...so needed to tweak a bit
-template<typename T>
-int BSTree<T>::findHeight(TreeNode<T>* node, T key) {
-	int height = 1;
-	if(node == NULL) {
-		return -1;
-	} else if(node->item == key) {
-		return height;
-	} else if(node->item < key) {
-		cout << "less than..." << endl;
-		return findHeight(node->left, key);
-	} else if(node->item > key) {
-		cout << endl;
-		cout << "greater than..." << endl;
-		return findHeight(node->right, key);
-	} else {
-		++height;
-	}
 
+template<typename T>
+int BSTree<T>::height(TreeNode<T>* node) {
+	if(node == NULL)
+		return 0;
+	else
+		return 1 + max(height(node->left), height(node->right));
 }
 
 template<typename T>
-int BSTree<T>::findHeight(T key) {
-	return findHeight(root, key);
+int BSTree<T>::find(T key) {
+	TreeNode<T> * node = searchTreeRetrieveTreeNode(key);  // find the TreeNode instance
+	if(node != NULL)
+		return height(node);    // ... then return its height
+	else
+		return 0;  // Not found... but should this be "0" instead?
 }
 
 template<typename T>
