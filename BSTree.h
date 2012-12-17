@@ -10,9 +10,11 @@
 #define BSTREE_H_
 #include <cstddef> // for NULL.
 #include <new>
+#include <iostream>
 #include "TreeNode.h"
 #include "TreeException.h"
-
+using std::endl;
+using std::cout;
 template<typename T>
 class BSTree {
 		typedef void (*FunctionType)(T* node);
@@ -35,6 +37,31 @@ class BSTree {
 		 */
 		virtual bool isEmpty();
 
+		/** Inserts an item into a binary search tree.
+		 * @pre The item to be inserted into the tree is newItem.
+		 * @post newItem is in its proper order in the tree.
+		 * @throw TreeException  If memory allocation fails. */
+		virtual void searchTreeInsert(const T newItem) throw (TreeException);
+
+		/** Deletes an item with a given search key from a binary search
+		 *  tree.
+		 * @pre searchKey is the search key of the item to be deleted.
+		 * @post If the item whose search key equals searchKey existed
+		 *       in the tree, the item is deleted. Otherwise, the tree
+		 *       is unchanged.
+		 * @throw TreeException  If searchKey is not found in the
+		 *        tree. */
+		virtual void searchTreeDelete(T searchKey) throw (TreeException);
+
+		/** Retrieves an item with a given search key from a binary
+		 *  search tree.
+		 * @pre searchKey is the search key of the item to be
+		 *      retrieved.
+		 * @post If the retrieval was successful, treeItem contains the
+		 *       retrieved item.
+		 * @throw TreeException  If no such item exists.
+		 */
+		virtual T* searchTreeRetrieve(T item);
 		/**
 		 * Insert an item into the tree.
 		 * @pre the item must exist
@@ -44,7 +71,7 @@ class BSTree {
 		 * @throws TreeException if memory allocation fails
 		 *
 		 */
-		virtual void insert(T item, TreeNode<T>* treePtr) throw (TreeException);
+		virtual void insert(TreeNode<T> *&treePtr, const T newItem) throw (TreeException);
 
 		/**
 		 * Delete an item from the tree
@@ -67,21 +94,19 @@ class BSTree {
 		 */
 		virtual T* retrieve(TreeNode<T>* treePtr, T item);
 
-		// getter & setter for the root node.
-		TreeNode<T>* getRoot();
-		void setRoot(TreeNode<T> *root);
+		/**
+		 * Find the findHeight to which our search key is located...
+		 */
+		int findHeight(TreeNode<T> *node, T key);
 
-		// traversal functions adapted from the code from the book...
-		void preorder(TreeNode<T> *node, FunctionType visit);
-		void inorder(TreeNode<T> *node, FunctionType visit);
-		void postorder(TreeNode<T> *node, FunctionType visit);
+		/**
+		 * Helper function...
+		 * @key the key to start from...
+		 */
+		int findHeight(T key);
 
-		// helper function to get the children (as well as set them).
-		// These have been adapted from the book's code.
-		void getChildPtrs(TreeNode<T> *node, TreeNode<T> *& left, TreeNode<T> *& right) const;
-		void setChildPtrs(TreeNode<T> *node, TreeNode<T> *left, TreeNode<T> *right);
-
-		int height(TreeNode<T> *node);
+		void printTree(TreeNode<T> *node);
+		void destroyTree();
 
 	protected:
 		/** Retrieves and deletes the leftmost descendant of a given
@@ -137,28 +162,30 @@ bool BSTree<T>::isEmpty() {
 }
 
 template<typename T>
-void BSTree<T>::insert(T item, TreeNode<T>* treePtr) throw (TreeException) {
+void BSTree<T>::insert(TreeNode<T>*& treePtr, const T newItem) throw (TreeException) {
 	if(treePtr == NULL) {  // position of insertion found; insert after leaf
+
 		// create a new node
 		try {
-			treePtr = new TreeNode<T>(item, NULL, NULL);
+			treePtr = new TreeNode<T>(newItem, NULL, NULL);
 		} catch(bad_alloc &e) {
-			throw TreeException(
-			        "TreeException: cannot allocate new memory for the new node to be inserted!");
+			throw TreeException("TreeException: insertItem cannot allocate memory");
 		}  // end try
 	}
 	// else search for the insertion position
-	else if(item < treePtr->item) {
+	else if(newItem < treePtr->item) {
 		// search the left subtree
-		cout << "item inserted to the left" << endl;
-		insert(item, treePtr->left);
+		insert(treePtr->left, newItem);
 	}
 
 	else {
 		// search the right subtree
-		cout << "item inserted to the left" << endl;
-		insert(item, treePtr->right);
+		insert(treePtr->right, newItem);
 	}
+}
+template<typename T>
+void BSTree<T>::searchTreeInsert(T newItem) throw (TreeException) {
+	insert(root, newItem);
 }
 
 template<typename T>
@@ -214,10 +241,13 @@ void BSTree<T>::deleteNodeItem(T item, TreeNode<T>* nodePtr) {
 		nodePtr->item = replacementItem;
 	}  // end if two children
 }
+template<typename T>
+void BSTree<T>::searchTreeDelete(T item) throw (TreeException) {
+	deleteItem(item, root);
+}
 
 template<typename T>
 T* BSTree<T>::retrieve(TreeNode<T>* treePtr, T item) {
-	T* ret = NULL;
 	if(treePtr == NULL)
 		return NULL;
 	else if(item == treePtr->item)
@@ -232,52 +262,8 @@ T* BSTree<T>::retrieve(TreeNode<T>* treePtr, T item) {
 }
 
 template<typename T>
-TreeNode<T>* BSTree<T>::getRoot() {
-	return this->root;
-}
-template<typename T>
-void BSTree<T>::setRoot(TreeNode<T>* newRoot) {
-	this->root = newRoot;
-}
-
-template<typename T>
-void BSTree<T>::preorder(TreeNode<T>* node, FunctionType visit) {
-	if(node != NULL) {
-		postorder(node->left, visit);
-		postorder(node->right, visit);
-		visit(node->item);
-	}
-}
-
-template<typename T>
-void BSTree<T>::inorder(TreeNode<T>* node, FunctionType visit) {
-	if(node != NULL) {
-		inorder(node->left, visit);
-		visit(node->item);
-		inorder(node->right, visit);
-	}  // end if
-}
-
-template<typename T>
-void BSTree<T>::postorder(TreeNode<T>* node, FunctionType visit) {
-	if(node != NULL) {
-		visit(node->item);
-		preorder(node->left, visit);
-		preorder(node->right, visit);
-	}  // end if
-}
-
-template<typename T>
-void BSTree<T>::getChildPtrs(TreeNode<T>* node, TreeNode<T>*& left, TreeNode<T>*& right) const {
-	left = node->left;
-	right = node->right;
-}
-
-template<typename T>
-void BSTree<T>::setChildPtrs(TreeNode<T>* node, TreeNode<T>* left, TreeNode<T>* right) {
-
-	node->left = root->left;
-	node->right = root->right;
+T* BSTree<T>::searchTreeRetrieve(T item) {
+	return retrieve(root, item);
 }
 
 template<typename T>
@@ -309,6 +295,31 @@ void BSTree<T>::copyTree(TreeNode<T>* treePtr, TreeNode<T> *&newTreePtr) throw (
 	}
 
 }
+// inspired in part by Mark Stein's code -- except I used templates...so needed to tweak a bit
+template<typename T>
+int BSTree<T>::findHeight(TreeNode<T>* node, T key) {
+	int height = 1;
+	if(node == NULL) {
+		return -1;
+	} else if(node->item == key) {
+		return height;
+	} else if(node->item < key) {
+		cout << "less than..." << endl;
+		return findHeight(node->left, key);
+	} else if(node->item > key) {
+		cout << endl;
+		cout << "greater than..." << endl;
+		return findHeight(node->right, key);
+	} else {
+		++height;
+	}
+
+}
+
+template<typename T>
+int BSTree<T>::findHeight(T key) {
+	return findHeight(root, key);
+}
 
 template<typename T>
 void BSTree<T>::destroyTree(TreeNode<T> *& treePtr) {
@@ -320,20 +331,27 @@ void BSTree<T>::destroyTree(TreeNode<T> *& treePtr) {
 		treePtr = NULL;
 	}  // end if
 }
+template<typename T>
+void BSTree<T>::destroyTree() {
+	if(root != NULL) {
+		destroyTree(root->left);
+		destroyTree(root->right);
+		delete root;
+		root = NULL;
+	}
+}
 
 template<typename T>
-int BSTree<T>::height(TreeNode<T>* node) {
-	if(node == NULL)
-		return 0;
-	if(node->left == NULL && node->right == NULL) {
-		return 1;
-	} else if(node->left != NULL && node->right != NULL) {
-		return 1 + max(height(node->left), height(node->right));
-	} else if(node->left != NULL) {
-		height(node->left) + 1;
-	} else {
-		height(node->right) + 1;
+void BSTree<T>::printTree(TreeNode<T> *node) {
+	using namespace std;
+	if(node == NULL) {
+		cout << "NULL" << endl;
+		return;
 	}
+	printTree(node->left);
+	cout << (node->item);
+	cout << endl;
+	printTree(node->right);
 }
 
 #endif /* BSTREE_H_ */
